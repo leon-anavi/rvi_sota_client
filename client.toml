@@ -1,5 +1,5 @@
 [client]
-storage_dir = "/var/sota"
+storage_dir = "/var/lib/sota"
 rvi_url = "http://127.0.0.1:8901"
 edge_url = "127.0.0.1:9080"
 timeout = 20

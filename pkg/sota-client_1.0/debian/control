@@ -1,0 +1,12 @@
+Source: sota-client
+Maintainer: Txus <txus@advancedtelematic.com>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 9)
+
+Package: sota-client
+Architecture: any
+Depends: libdbus-1-3, rvi-client, rvi-core
+Description: Sota Client
+ Sota Client

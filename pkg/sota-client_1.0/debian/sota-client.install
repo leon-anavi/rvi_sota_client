@@ -1,0 +1,3 @@
+target/release/sota_client opt/ats/sota_client/bin
+client.toml opt/ats/sota_client/conf
+sota_client.service lib/systemd/system
