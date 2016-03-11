@@ -2,8 +2,9 @@
 
 use std::fmt;
 use std::sync::Mutex;
-use message::{BackendServices, UserMessage, UserPackage};
-use message::Notification;
+
+use event::inbound::{InboundEvent, UpdateAvailable};
+use message::{BackendServices, UserPackage};
 use handler::{Result, RemoteServices, HandleMessageParams};
 use persistence::Transfers;
 
@@ -33,9 +34,11 @@ impl HandleMessageParams for NotifyParams {
             info!("New package available: {}", package);
         }
 
-        Ok(Some(Notification::Notify(UserMessage {
-            packages: self.packages.clone(),
-            services: self.services.clone()
+        Ok(Some(InboundEvent::UpdateAvailable(UpdateAvailable {
+            update_id: String::new(),
+            signature: String::new(),
+            description: String::new(),
+            request_confirmation: false
         })))
     }
 }

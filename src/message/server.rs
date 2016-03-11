@@ -1,7 +1,6 @@
 //! Translation layer for the SOTA server.
 
 use super::package_id::PackageId;
-use super::client::PackageReport;
 
 /// Encodes the "Chunk Received" message, indicating that a chunk was successfully transferred.
 #[derive(RustcEncodable)]
@@ -38,6 +37,7 @@ impl BackendServices {
         }
     }
 
+    /*
     /// Update the `BackendServices` object with new values.
     ///
     /// # Arguments
@@ -48,6 +48,7 @@ impl BackendServices {
         self.report = new.report.clone();
         self.packages = new.packages.clone();
     }
+    */
 }
 
 /// Encodes a package/checksum pair.
@@ -72,6 +73,8 @@ pub struct ServerPackageReport {
     pub vin: String
 }
 
+/*
+use super::client::PackageReport;
 impl ServerPackageReport {
     /// Create a new `ServerPackageReport` from a `PackageReport`.
     ///
@@ -110,3 +113,4 @@ impl ServerReport {
         }
     }
 }
+*/

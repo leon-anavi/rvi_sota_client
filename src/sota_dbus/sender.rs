@@ -1,15 +1,15 @@
 //! Sending side of the DBus interface.
 
 use std::convert::From;
-use std::borrow::Cow;
 
 use dbus::{Connection, BusType, MessageItem, Message, FromMessageItem};
+
+use configuration::DBusConfiguration;
 use event::inbound::{UpdateAvailable, DownloadComplete, GetInstalledSoftware};
 use event::outbound::{InstalledFirmwares, InstalledPackages, InstalledSoftware};
 
-use configuration::DBusConfiguration;
-use message::{UserPackage, PackageId, PackageReport};
-use message::ParsePackageReport;
+// use message::{UserPackage, PackageId, PackageReport};
+// use message::ParsePackageReport;
 
 pub fn send_update_available(config: &DBusConfiguration, e: UpdateAvailable) {
     let args = [
@@ -65,6 +65,10 @@ pub fn send_get_installed_software(config: &DBusConfiguration, e: GetInstalledSo
         firmware: installed_firmware
     })
 }
+
+/*
+ *
+use std::borrow::Cow;
 
 /// Foward a "Notify" message to DBus.
 ///
@@ -132,6 +136,7 @@ fn parse_package_list(m: &Message) -> Vec<PackageId> {
         .map(|arr| arr.iter().map(|p| FromMessageItem::from(p).unwrap()).collect())
         .unwrap_or(Vec::new())
 }
+*/
 
 #[cfg(test)]
 mod test {

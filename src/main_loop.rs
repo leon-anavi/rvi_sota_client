@@ -4,16 +4,19 @@ use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 
 use rvi;
-use handler::ServiceHandler;
+use handler::{LocalServices, ServiceHandler};
 use event::Event;
 use event::inbound::InboundEvent;
 use event::outbound::OutBoundEvent;
-use message::{InitiateParams, BackendServices, Notification, ServerPackageReport, ServerReport};
+use message::{BackendServices};
+// use message::{InitiateParams, Notification, ServerPackageReport, ServerReport};
 use configuration::Configuration;
 use configuration::DBusConfiguration;
 use sota_dbus;
 
-pub fn handle(cfg: &DBusConfiguration, rx: Receiver<Event>) {
+pub fn handle(cfg: &DBusConfiguration, rx: Receiver<Event>, _: LocalServices) {
+
+    let _ = BackendServices::new();
     loop {
         match rx.recv().unwrap() {
             Event::Inbound(i) => match i {
@@ -50,18 +53,18 @@ pub fn handle(cfg: &DBusConfiguration, rx: Receiver<Event>) {
 pub fn start(conf: &Configuration, rvi_url: String, edge_url: String) {
     // Main message channel from RVI and DBUS
     let (tx, rx) = channel();
-    let (tx_main, rx_main) = channel();
 
     // RVI edge handler
-    let handler = ServiceHandler::new(tx_main.clone(), rvi_url.clone(), conf.clone());
+    let handler = ServiceHandler::new(tx.clone(), rvi_url.clone(), conf.clone());
     let rvi_edge = rvi::ServiceEdge::new(rvi_url.clone(), edge_url);
     let local_services = handler.start(rvi_edge);
 
     // DBUS handler
     let dbus_receiver = sota_dbus::Receiver::new(conf.dbus.clone(), tx);
     thread::spawn(move || dbus_receiver.start());
-    handle(&conf.dbus, rx);
+    handle(&conf.dbus, rx, local_services);
 
+    /*
     let mut backend_services = BackendServices::new();
     loop {
         match rx_main.recv().unwrap() {
@@ -100,4 +103,5 @@ pub fn start(conf: &Configuration, rvi_url: String, edge_url: String) {
             }
         }
     }
+        */
 }

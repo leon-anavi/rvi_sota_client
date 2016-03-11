@@ -2,8 +2,8 @@
 
 use std::sync::Mutex;
 
-
-use message::{PackageId, Notification, ServerPackageReport};
+use event::inbound::{InboundEvent, DownloadComplete};
+use message::{PackageId, ServerPackageReport};
 use handler::{Error, Result, RemoteServices, HandleMessageParams};
 use persistence::Transfers;
 
@@ -29,7 +29,10 @@ impl HandleMessageParams for FinishParams {
         if success {
             transfers.remove(&self.package);
             info!("Finished transfer of {}", self.package);
-            Ok(Some(Notification::Finish(self.package.clone())))
+            Ok(Some(InboundEvent::DownloadComplete(DownloadComplete {
+                update_image: String::new(),
+                signature: String::new()
+            })))
         } else {
             let _ = services.send_package_report(
                 ServerPackageReport {
