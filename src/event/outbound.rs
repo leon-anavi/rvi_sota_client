@@ -1,17 +1,41 @@
-pub type UpdateId = String;
+#[derive(RustcDecodable, Debug, Clone)]
+pub struct InstalledFirmware {
+    pub module: String,
+    pub firmware_id: String,
+    pub last_modified: u64
+}
 
-#[derive(RustcDecodable, Debug, PartialEq, PartialOrd, Clone)]
+pub struct InstalledFirmwares(pub Vec<InstalledFirmware>);
+
+#[derive(RustcDecodable, Debug, Clone)]
+pub struct InstalledPackage {
+    pub package_id: String,
+    pub name: String,
+    pub description: String,
+    pub last_modified: u64
+}
+
+pub struct InstalledPackages(pub Vec<InstalledPackage>);
+
+pub struct InstalledSoftware {
+    pub packages: InstalledPackages,
+    pub firmware: InstalledFirmwares
+}
+
+#[derive(RustcDecodable, Debug, Clone)]
 pub struct OperationResult {
-    id: String,
-    result_code: u32,
-    result_text: String
+    pub id: String,
+    pub result_code: u32,
+    pub result_text: String
 }
 
 pub struct OperationResults(pub Vec<OperationResult>);
 
+pub type UpdateId = String;
+
 pub struct UpdateReport {
-    update_id: String,
-    operation_results: OperationResults
+    pub update_id: String,
+    pub operation_results: OperationResults
 }
 
 impl UpdateReport {

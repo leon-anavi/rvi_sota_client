@@ -10,19 +10,30 @@ use event::inbound::InboundEvent;
 use event::outbound::OutBoundEvent;
 use message::{InitiateParams, BackendServices, Notification, ServerPackageReport, ServerReport};
 use configuration::Configuration;
+use configuration::DBusConfiguration;
 use sota_dbus;
 
-pub fn handle(rx: Receiver<Event>) {
+pub fn handle(cfg: &DBusConfiguration, rx: Receiver<Event>) {
     loop {
         match rx.recv().unwrap() {
             Event::Inbound(i) => match i {
-                InboundEvent::UpdateAvailable(_) => info!("Update available"),
-                InboundEvent::GetInstalledSoftware(_) => info!("Get installed software")
+                InboundEvent::UpdateAvailable(e) => {
+                    info!("UpdateAvailable");
+                    sota_dbus::sender::send_update_available(&cfg, e);
+                },
+                InboundEvent::DownloadComplete(e) => {
+                    info!("DownloadComplete");
+                    sota_dbus::sender::send_download_complete(&cfg, e);
+                },
+                InboundEvent::GetInstalledSoftware(e) => {
+                    info!("GetInstalledSoftware");
+                    let _ = sota_dbus::sender::send_get_installed_software(&cfg, e);
+                }
             },
             Event::OutBound(o) => match o {
                 OutBoundEvent::InitiateDownload(_) => info!("InitiateDownload"),
                 OutBoundEvent::AbortDownload(_) => info!("AbortDownload"),
-                OutBoundEvent::UpdateReport(_) => info!("Update report")
+                OutBoundEvent::UpdateReport(_) => info!("UpdateReport")
             }
         }
     }
@@ -49,10 +60,9 @@ pub fn start(conf: &Configuration, rvi_url: String, edge_url: String) {
     // DBUS handler
     let dbus_receiver = sota_dbus::Receiver::new(conf.dbus.clone(), tx);
     thread::spawn(move || dbus_receiver.start());
+    handle(&conf.dbus, rx);
 
     let mut backend_services = BackendServices::new();
-
-
     loop {
         match rx_main.recv().unwrap() {
             // Pass on notifications to the DBus

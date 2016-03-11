@@ -1,20 +1,23 @@
 
-#[allow(dead_code)]
 pub struct UpdateAvailable {
-    update_id: String,
-    signature: String,
-    description: String,
-    request_confirmation: bool
+    pub update_id: String,
+    pub signature: String,
+    pub description: String,
+    pub request_confirmation: bool
 }
 
-#[allow(dead_code)]
+pub struct DownloadComplete {
+    pub update_image: String,
+    pub signature: String
+}
+
 pub struct GetInstalledSoftware {
-    include_packages: bool,
-    include_module_firmware: bool
+    pub include_packages: bool,
+    pub include_module_firmware: bool
 }
 
-#[allow(dead_code)]
 pub enum InboundEvent {
     UpdateAvailable(UpdateAvailable),
+    DownloadComplete(DownloadComplete),
     GetInstalledSoftware(GetInstalledSoftware)
 }

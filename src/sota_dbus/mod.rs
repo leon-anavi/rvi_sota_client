@@ -3,7 +3,7 @@
 //! Also see the documentation of the Rust [`dbus`](../../dbus/index.html) bindings.
 
 mod decode;
-mod sender;
+pub mod sender;
 mod receiver;
 
 pub use self::sender::{send_notify, request_install, request_report};

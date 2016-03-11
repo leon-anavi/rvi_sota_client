@@ -60,3 +60,45 @@ impl<'a> FromMessageItem<'a> for OperationResults {
     }
 }
 
+use event::outbound::{InstalledPackage, InstalledPackages};
+
+impl<'a> FromMessageItem<'a> for InstalledPackage {
+    fn from(m: &'a MessageItem) -> Result<Self, ()> {
+        let m: DecodableStruct = try!(FromMessageItem::from(m));
+        decode::<InstalledPackage>(m.0).ok_or(())
+    }
+}
+
+impl<'a> FromMessageItem<'a> for InstalledPackages {
+    fn from(m: &'a MessageItem) -> Result<Self, ()> {
+        let arr: &Vec<MessageItem> = try!(FromMessageItem::from(m));
+        arr.into_iter()
+            .map(|i| {
+                let i: Result<InstalledPackage, ()> = FromMessageItem::from(i);
+                i })
+            .collect::<Result<Vec<_>, ()>>()
+            .map(|a| InstalledPackages(a))
+    }
+}
+
+use event::outbound::{InstalledFirmware, InstalledFirmwares};
+
+impl<'a> FromMessageItem<'a> for InstalledFirmware {
+    fn from(m: &'a MessageItem) -> Result<Self, ()> {
+        let m: DecodableStruct = try!(FromMessageItem::from(m));
+        decode::<InstalledFirmware>(m.0).ok_or(())
+    }
+}
+
+impl<'a> FromMessageItem<'a> for InstalledFirmwares {
+    fn from(m: &'a MessageItem) -> Result<Self, ()> {
+        let arr: &Vec<MessageItem> = try!(FromMessageItem::from(m));
+        arr.into_iter()
+            .map(|i| {
+                let i: Result<InstalledFirmware, ()> = FromMessageItem::from(i);
+                i })
+            .collect::<Result<Vec<_>, ()>>()
+            .map(|a| InstalledFirmwares(a))
+    }
+}
+
