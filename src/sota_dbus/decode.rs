@@ -39,7 +39,7 @@ impl<'a> FromMessageItem<'a> for DecodableStruct {
 }
 
 
-use super::receiver::{OperationResult, OperationResults};
+use event::outbound::{OperationResult, OperationResults};
 
 impl<'a> FromMessageItem<'a> for OperationResult {
     fn from(m: &'a MessageItem) -> Result<Self, ()> {

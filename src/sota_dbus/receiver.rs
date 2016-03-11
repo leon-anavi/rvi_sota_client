@@ -3,10 +3,10 @@
 use std::sync::mpsc::Sender;
 
 use configuration::DBusConfiguration;
-use message::{PackageId, Notification};
+use event::Event;
+use event::outbound::{OutBoundEvent, OperationResults, UpdateReport};
 
-use dbus::{Connection, NameFlag, BusType, MessageItem, ConnectionItem, Message};
-use dbus::FromMessageItem;
+use dbus::{Connection, NameFlag, BusType, ConnectionItem, Message, FromMessageItem};
 use dbus::obj::*;
 
 /// DBus error string to indicate a missing argument.
@@ -29,7 +29,7 @@ pub struct Receiver {
     /// The configuration for the DBus interface.
     config: DBusConfiguration,
     /// A sender to forward incoming messages.
-    sender: Sender<Notification>
+    sender: Sender<Event>
 }
 
 impl Receiver {
@@ -38,7 +38,7 @@ impl Receiver {
     /// # Arguments
     /// * `c`: The configuration for the DBus interface.
     /// * `s`: A sender to forward incoming messages.
-    pub fn new(c: DBusConfiguration, s: Sender<Notification>) -> Receiver {
+    pub fn new(c: DBusConfiguration, s: Sender<Event>) -> Receiver {
         Receiver {
             config: c,
             sender: s
@@ -89,49 +89,55 @@ impl Receiver {
     /// # Arguments
     /// * `msg`: The message to handle.
     fn handle_initiate_download(&self, msg: &mut Message) -> MethodResult {
-        trace!("msg: {:?}", msg);
-        let arg = try!(msg.get_items().pop().ok_or(missing_arg()));
         let sender = try!(get_sender(msg).ok_or(missing_arg()));
         trace!("sender: {:?}", sender);
+        trace!("msg: {:?}", msg);
 
-        let packages = try!(parse_package_list(&arg, &sender).or(Err(malformed_arg())));
-        let _ = self.sender.send(Notification::Initiate(packages));
-        Ok(vec!(MessageItem::Bool(true)))
+        let arg = try!(msg.get_items().pop().ok_or(missing_arg()));
+        let update_id: &String = try!(FromMessageItem::from(&arg).or(Err(malformed_arg())));
+        let _ = self.sender.send(
+            Event::OutBound(OutBoundEvent::InitiateDownload(update_id.clone())));
+
+        Ok(vec!())
     }
 
     fn handle_abort_download(&self, msg: &mut Message) -> MethodResult {
+        let sender = try!(get_sender(msg).ok_or(missing_arg()));
+        trace!("sender: {:?}", sender);
         trace!("msg: {:?}", msg);
+
+        let arg = try!(msg.get_items().pop().ok_or(missing_arg()));
+        let update_id: &String = try!(FromMessageItem::from(&arg).or(Err(malformed_arg())));
+        let _ = self.sender.send(
+            Event::OutBound(OutBoundEvent::AbortDownload(update_id.clone())));
+
         Ok(vec!())
     }
 
     fn handle_update_report(&self, msg: &mut Message) -> MethodResult {
+        let sender = try!(get_sender(msg).ok_or(missing_arg()));
+        trace!("sender: {:?}", sender);
         trace!("msg: {:?}", msg);
+
+        let arg = try!(msg.get_items().pop().ok_or(missing_arg()));
+        let update_id: &String = try!(FromMessageItem::from(&arg).or(Err(malformed_arg())));
+
+        let arg = try!(msg.get_items().pop().ok_or(missing_arg()));
+        let operation_results: OperationResults = try!(FromMessageItem::from(&arg).or(Err(malformed_arg())));
+
+        let report = UpdateReport::new(update_id.clone(), operation_results);
+        let _ = self.sender.send(
+            Event::OutBound(OutBoundEvent::UpdateReport(report)));
+
         Ok(vec!())
     }
 }
-
-#[derive(RustcDecodable, Debug, PartialEq, PartialOrd, Clone)]
-pub struct OperationResult {
-    id: String,
-    result_code: u32,
-    result_text: String
-}
-
-pub struct OperationResults(pub Vec<OperationResult>);
-
-
 
 #[cfg(not(test))]
 fn get_sender(msg: &Message) -> Option<String> { msg.sender() }
 #[cfg(test)]
 fn get_sender(_: &Message) -> Option<String> { Some("test".to_string()) }
 
-fn parse_package_list(msg: &MessageItem, sender: &str)
-    -> Result<PackageId, ()> {
-    let package: PackageId = try!(FromMessageItem::from(msg));
-    info!("Got initiate for {} from {}", package, sender);
-    Ok(package)
-}
 
 #[cfg(test)]
 mod test {

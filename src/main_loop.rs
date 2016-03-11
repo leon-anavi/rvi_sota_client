@@ -1,13 +1,32 @@
 //! Main loop, starting the worker threads and wiring up communication channels between them.
 
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 
 use rvi;
 use handler::ServiceHandler;
+use event::Event;
+use event::inbound::InboundEvent;
+use event::outbound::OutBoundEvent;
 use message::{InitiateParams, BackendServices, Notification, ServerPackageReport, ServerReport};
 use configuration::Configuration;
 use sota_dbus;
+
+pub fn handle(rx: Receiver<Event>) {
+    loop {
+        match rx.recv().unwrap() {
+            Event::Inbound(i) => match i {
+                InboundEvent::UpdateAvailable(_) => info!("Update available"),
+                InboundEvent::GetInstalledSoftware(_) => info!("Get installed software")
+            },
+            Event::OutBound(o) => match o {
+                OutBoundEvent::InitiateDownload(_) => info!("InitiateDownload"),
+                OutBoundEvent::AbortDownload(_) => info!("AbortDownload"),
+                OutBoundEvent::UpdateReport(_) => info!("Update report")
+            }
+        }
+    }
+}
 
 /// Main loop, starting the worker threads and wiring up communication channels between them.
 ///
@@ -19,6 +38,7 @@ use sota_dbus;
 ///   RVI calls.
 pub fn start(conf: &Configuration, rvi_url: String, edge_url: String) {
     // Main message channel from RVI and DBUS
+    let (tx, rx) = channel();
     let (tx_main, rx_main) = channel();
 
     // RVI edge handler
@@ -27,10 +47,11 @@ pub fn start(conf: &Configuration, rvi_url: String, edge_url: String) {
     let local_services = handler.start(rvi_edge);
 
     // DBUS handler
-    let dbus_receiver = sota_dbus::Receiver::new(conf.dbus.clone(), tx_main);
+    let dbus_receiver = sota_dbus::Receiver::new(conf.dbus.clone(), tx);
     thread::spawn(move || dbus_receiver.start());
 
     let mut backend_services = BackendServices::new();
+
 
     loop {
         match rx_main.recv().unwrap() {
