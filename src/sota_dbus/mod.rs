@@ -2,6 +2,7 @@
 //!
 //! Also see the documentation of the Rust [`dbus`](../../dbus/index.html) bindings.
 
+mod decode;
 mod sender;
 mod receiver;
 
