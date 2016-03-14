@@ -1,3 +1,5 @@
+use super::UpdateId;
+
 #[derive(RustcDecodable, Debug, Clone)]
 pub struct InstalledFirmware {
     pub module: String,
@@ -30,8 +32,6 @@ pub struct OperationResult {
 }
 
 pub struct OperationResults(pub Vec<OperationResult>);
-
-pub type UpdateId = String;
 
 pub struct UpdateReport {
     pub update_id: String,
