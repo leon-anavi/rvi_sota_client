@@ -12,7 +12,8 @@ use persistence::Transfers;
 #[derive(RustcDecodable)]
 pub struct FinishParams {
     /// The package transfer to finalize.
-    pub update_id: UpdateId
+    pub update_id: UpdateId,
+    pub signature: String
 }
 
 impl HandleMessageParams for FinishParams {
@@ -31,7 +32,7 @@ impl HandleMessageParams for FinishParams {
             info!("Finished transfer of {}", self.update_id);
             Ok(Some(InboundEvent::DownloadComplete(DownloadComplete {
                 update_image: String::new(),
-                signature: String::new()
+                signature: self.signature.clone()
             })))
         } else {
             /*
@@ -154,4 +155,5 @@ mod test {
             assert!(!transfers.lock().unwrap().is_empty());
         }
     }
+
 }
