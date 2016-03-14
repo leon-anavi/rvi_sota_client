@@ -2,8 +2,10 @@
 pub struct UpdateAvailable {
     pub update_id: String,
     pub signature: String,
+    pub name: String,
     pub description: String,
-    pub request_confirmation: bool
+    pub request_confirmation: bool,
+    pub size: u64
 }
 
 pub struct DownloadComplete {

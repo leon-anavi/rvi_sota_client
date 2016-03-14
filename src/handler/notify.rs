@@ -37,8 +37,10 @@ impl HandleMessageParams for NotifyParams {
         Ok(Some(InboundEvent::UpdateAvailable(UpdateAvailable {
             update_id: String::new(),
             signature: String::new(),
+            name: String::new(),
             description: String::new(),
-            request_confirmation: false
+            request_confirmation: false,
+            size: 0
         })))
     }
 }
