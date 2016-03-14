@@ -17,6 +17,7 @@ pub enum Notification {
 }
 */
 
+/*
 /// Encodes the package/size pair, that is sent by the server to notify the client of new updates.
 #[derive(RustcDecodable, Clone, PartialEq, Eq, Debug)]
 pub struct UserPackage {
@@ -34,7 +35,6 @@ impl From<UserPackage> for MessageItem {
     }
 }
 
-/*
 use std::vec::Vec;
 use super::server::BackendServices;
 

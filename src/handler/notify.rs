@@ -1,26 +1,20 @@
 //! Handles "Notify" messages.
 
-use std::fmt;
 use std::sync::Mutex;
 
 use event::inbound::{InboundEvent, UpdateAvailable};
-use message::{BackendServices, UserPackage};
+use message::BackendServices;
 use handler::{Result, RemoteServices, HandleMessageParams};
 use persistence::Transfers;
 
-impl fmt::Display for UserPackage {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}, size: {}", self.package, self.size)
-    }
-}
 
 /// Type for "Notify" messages.
 #[derive(RustcDecodable, Clone)]
 pub struct NotifyParams {
     /// A `Vector` of packages, that are available for download.
-    pub packages: Vec<UserPackage>,
+    pub update_available: UpdateAvailable,
     /// The service URLs, that the SOTA server supports.
-    pub services: BackendServices
+    pub services: BackendServices,
 }
 
 impl HandleMessageParams for NotifyParams {
@@ -30,18 +24,7 @@ impl HandleMessageParams for NotifyParams {
         let mut services = services.lock().unwrap();
         services.set(self.services.clone());
 
-        for package in &self.packages {
-            info!("New package available: {}", package);
-        }
-
-        Ok(Some(InboundEvent::UpdateAvailable(UpdateAvailable {
-            update_id: String::new(),
-            signature: String::new(),
-            name: String::new(),
-            description: String::new(),
-            request_confirmation: false,
-            size: 0
-        })))
+        Ok(Some(InboundEvent::UpdateAvailable(self.update_available.clone())))
     }
 }
 
