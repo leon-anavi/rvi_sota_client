@@ -1,12 +1,12 @@
 //! Translation layer for the SOTA server.
 
-use super::package_id::PackageId;
+use event::UpdateId;
 
 /// Encodes the "Chunk Received" message, indicating that a chunk was successfully transferred.
 #[derive(RustcEncodable)]
 pub struct ChunkReceived {
     /// The transfer to which the transferred chunk belongs.
-    pub package: PackageId,
+    pub update_id: UpdateId,
     /// A list of the successfully transferred chunks.
     pub chunks: Vec<u64>,
     /// The VIN of this device.
@@ -51,6 +51,9 @@ impl BackendServices {
     */
 }
 
+/*
+use super::package_id::PackageId;
+
 /// Encodes a package/checksum pair.
 #[derive(RustcDecodable, Clone)]
 pub struct PackageSum {
@@ -73,7 +76,6 @@ pub struct ServerPackageReport {
     pub vin: String
 }
 
-/*
 use super::client::PackageReport;
 impl ServerPackageReport {
     /// Create a new `ServerPackageReport` from a `PackageReport`.

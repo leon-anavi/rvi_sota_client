@@ -23,7 +23,8 @@ use rvi::{Message, ServiceEdge};
 
 use event::Event;
 use event::inbound::InboundEvent;
-use message::{BackendServices, ChunkReceived, ServerPackageReport};
+use message::{BackendServices, ChunkReceived};
+// use message::ServerPackageReport;
 use handler::{NotifyParams, StartParams, ChunkParams, FinishParams};
 use handler::{ReportParams, AbortParams, HandleMessageParams};
 use persistence::Transfers;
@@ -80,10 +81,12 @@ impl RemoteServices {
             .and_then(|ref svcs| rvi::send_message(&self.url, m, &svcs.ack))
     }
 
+    /*
     pub fn send_package_report(&self, m: ServerPackageReport) -> Result<String, String> {
         self.svcs.iter().next().ok_or(format!("RemoteServices not set"))
             .and_then(|ref svcs| rvi::send_message(&self.url, m, &svcs.report))
     }
+    */
 }
 
 
