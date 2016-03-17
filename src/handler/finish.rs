@@ -34,18 +34,7 @@ impl HandleMessageParams for FinishParams {
                 signature: self.signature.clone()
             })))
         } else {
-            /*
-        let services = services.lock().unwrap();
-            let _ = services.send_package_report(
-                ServerPackageReport {
-                    package: self.package.clone(),
-                    status: false,
-                    description: "checksums didn't match".to_string(),
-                    vin: services.vin.clone() })
-                .map_err(|e| {
-                    error!("Error on sending ServerPackageReport: {}", e);
-                    Error::SendFailure });
-                    */
+            // TODO: Report transfer error to server
             Err(Error::UnknownPackage)
         }
     }
