@@ -8,9 +8,6 @@ use configuration::DBusConfiguration;
 use event::inbound::{UpdateAvailable, DownloadComplete, GetInstalledSoftware};
 use event::outbound::{InstalledFirmwares, InstalledPackages, InstalledSoftware};
 
-// use message::{UserPackage, PackageId, PackageReport};
-// use message::ParsePackageReport;
-
 pub fn send_update_available(config: &DBusConfiguration, e: UpdateAvailable) {
     let args = [
         MessageItem::from(e.update_id),
@@ -66,68 +63,3 @@ pub fn send_get_installed_software(config: &DBusConfiguration, e: GetInstalledSo
     })
 }
 
-
-#[cfg(test)]
-mod test {
-    use dbus::{Message, MessageItem};
-
-    use super::*;
-    use super::parse_package_list;
-
-    use configuration::DBusConfiguration;
-    use message::UserPackage;
-    use test_library::generate_random_package;
-
-    #[test]
-    fn it_sets_a_valid_notify_signature() {
-        test_init!();
-        let conf = DBusConfiguration::gen_test();
-        let packages = vec!(UserPackage {
-            package: generate_random_package(15),
-            size: 500
-        });
-
-        send_notify(&conf, packages);
-    }
-
-    #[test]
-    fn it_sets_a_valid_download_complete_signature() {
-        test_init!();
-        let conf = DBusConfiguration::gen_test();
-        request_install(&conf, generate_random_package(15));
-    }
-
-    fn gen_test_message() -> Message {
-        let config = DBusConfiguration::gen_test();
-        Message::new_method_call(&config.name, "/", &config.interface,
-                                 "GetAllPackages").unwrap()
-    }
-
-    #[test]
-    fn it_successfully_parses_a_valid_report() {
-        test_init!();
-        let mut message = gen_test_message();
-        let mut packages = Vec::new();
-        let mut package_items = Vec::new();
-        for i in 1..20 {
-            let package = generate_random_package(i);
-            package_items.push(MessageItem::from(&package));
-            packages.push(package);
-        }
-
-        let args = [MessageItem::new_array(package_items).unwrap()];
-        message.append_items(&args);
-
-        let decoded = parse_package_list(&message);
-        assert!(!decoded.is_empty());
-        assert_eq!(decoded, packages);
-    }
-
-    #[test]
-    fn it_returns_a_empty_list_for_invalid_reports() {
-        test_init!();
-        let message = gen_test_message();
-        let decoded = parse_package_list(&message);
-        assert!(decoded.is_empty());
-    }
-}
