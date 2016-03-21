@@ -365,16 +365,6 @@ impl Transfers {
             Transfer::new(self.storage_dir.to_string(), pkg, cksum));
     }
 
-    #[cfg(test)]
-    pub fn push_test(&mut self, tr: Transfer) {
-        self.items.insert(tr.update_id.clone(), tr);
-    }
-
-    #[cfg(test)]
-    pub fn is_empty(&self) -> bool {
-        self.items.is_empty()
-    }
-
     pub fn remove(&mut self, pkg: &UpdateId) {
         self.items.remove(pkg);
     }

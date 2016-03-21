@@ -270,3 +270,69 @@ impl rvi::ServiceHandler for ServiceHandler {
         remote_svcs.set_remote(svcs.get_vin(self.conf.vin_match), svcs);
     }
 }
+
+#[cfg(test)]
+mod test {
+    use configuration::ClientConfiguration;
+
+    pub fn gen_cfg() -> ClientConfiguration {
+        ClientConfiguration {
+            storage_dir: "/var/sota".to_string(),
+            rvi_url: Some("http://127.0.0.1:8901".to_string()),
+            edge_url: Some("127.0.0.1:9080".to_string()),
+            timeout: Some(20),
+            vin_match: 2
+        }
+    }
+
+    // #[test]
+    fn it_handles_messages_from_remote() {
+        use std::sync::{Arc, Mutex};
+        use std::sync::mpsc::channel;
+
+        use event::Event;
+        use event::inbound::InboundEvent;
+        use event::outbound::{UpdateReport, OperationResults, OperationResult};
+        use remote::svc::{RemoteServices, ServiceHandler};
+        use remote::rvi;
+
+        let cfg = gen_cfg();
+        let rvi_url = "http://127.0.0.1:8901".to_string();
+        let (tx, rx) = channel();
+
+        // RVI edge handler
+        let remote_svcs = Arc::new(Mutex::new(RemoteServices::new(rvi_url.clone())));
+        let handler = ServiceHandler::new(tx.clone(), remote_svcs.clone(), cfg.clone());
+        let rvi_edge = rvi::ServiceEdge::new(rvi_url, cfg.edge_url.unwrap(), handler);
+        rvi_edge.start();
+
+        loop {
+            match rx.recv().unwrap() {
+                Event::Inbound(i) => match i {
+                    InboundEvent::UpdateAvailable(e) => {
+                        info!("UpdateAvailable");
+                        let _ = remote_svcs.lock().unwrap().send_start_download(e.update_id);
+                    },
+                    InboundEvent::DownloadComplete(e) => {
+                        info!("DownloadComplete");
+                        let _ = remote_svcs.lock().unwrap().send_update_report(
+                            UpdateReport {
+                                update_id: e.update_id,
+                                operation_results: OperationResults(vec![
+                                    OperationResult {
+                                        id: "1234".to_string(),
+                                        result_code: 0,
+                                        result_text: "Success".to_string()
+                                    }])
+                            });
+                    },
+                    InboundEvent::GetInstalledSoftware(_) => {
+                        info!("GetInstalledSoftware");
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+}
+

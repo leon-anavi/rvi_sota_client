@@ -70,3 +70,77 @@ pub fn start(conf: &Configuration, rvi_url: String, edge_url: String) {
     thread::spawn(move || dbus_receiver.start());
     handle(&conf.dbus, rx, remote_svcs);
 }
+
+#[cfg(test)]
+mod test {
+    use configuration::DBusConfiguration;
+    use event::Event;
+    use event::inbound::{UpdateAvailable, DownloadComplete};
+    use event::outbound::OutBoundEvent;
+    use genivi;
+
+    pub fn gen_cfg() -> DBusConfiguration {
+        DBusConfiguration {
+            name: "org.genivi.sota_client".to_string(),
+            path: "/org/genivi/sota_client".to_string(),
+            interface: "org.genivi.sota_client".to_string(),
+            software_manager: "org.genivi.software_loading_manager".to_string(),
+            software_manager_path: "/org/genivi/software_loading_manager".to_string(),
+            timeout: 20
+        }
+    }
+
+    #[test]
+    fn it_sends_update_available() {
+        use std::sync::mpsc::channel;
+        use std::thread;
+
+        use genivi::swm::test::Swm;
+
+        let cfg = gen_cfg();
+        let (tx, rx) = channel();
+        let dbus_receiver = genivi::sc::Receiver::new(cfg.clone(), tx);
+        thread::spawn(move || dbus_receiver.start());
+        let swm = Swm { config: cfg.clone() };
+        thread::spawn(move || swm.start());
+
+        genivi::swm::send_update_available(
+            &cfg,
+            UpdateAvailable {
+                update_id: "12345".to_string(),
+                signature: "12345".to_string(),
+                description: "test-update-desc".to_string(),
+                request_confirmation: false,
+                size: 1024
+            });
+        loop {
+            match rx.recv() {
+                Ok(e) => match e {
+                    Event::OutBound(o) => match o {
+                        OutBoundEvent::InitiateDownload(u) => {
+                            debug!("InitiateDownload");
+                            genivi::swm::send_download_complete(
+                                &cfg,
+                                DownloadComplete {
+                                    update_id: u,
+                                    update_image: "/home/jerry/sota/client-device/sample_update.upd".to_string(),
+                                    signature: "1234".to_string()
+                                });
+                            break;
+                        },
+                        OutBoundEvent::AbortDownload(_) => info!("AbortDownload"),
+                        OutBoundEvent::UpdateReport(_) => {
+                            debug!("UpdateReport");
+                            break;
+                        }
+                    },
+                    _ => {}
+                },
+                Err(e) => {
+                    error!("Error: {}", e);
+                    break;
+                }
+            }
+        }
+    }
+}
