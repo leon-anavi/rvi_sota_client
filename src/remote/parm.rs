@@ -32,7 +32,7 @@ pub trait ParamHandler {
 #[derive(RustcDecodable, Clone)]
 pub struct NotifyParams {
     /// A `Vector` of packages, that are available for download.
-    pub update_available: UpdateAvailable,
+    pub update: UpdateAvailable,
     /// The service URLs, that the SOTA server supports.
     pub services: BackendServices,
 }
@@ -44,7 +44,7 @@ impl ParamHandler for NotifyParams {
         let mut services = services.lock().unwrap();
         services.set(self.services.clone());
 
-        Ok(Some(InboundEvent::UpdateAvailable(self.update_available.clone())))
+        Ok(Some(InboundEvent::UpdateAvailable(self.update.clone())))
     }
 }
 
